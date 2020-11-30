@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">接单宝</string>
+    <string-array name="order_style">
+        <item>全部</item>
+        <item>自提</item>
+        <item>堂食</item>
+    </string-array>
+</resources>

@@ -1,0 +1,192 @@
+package com.yp.fastpayment.thread;
+
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.yp.fastpayment.api.MyCallback;
+import com.yp.fastpayment.api.MyRetrofit;
+import com.yp.fastpayment.api.request.OrderListRequest;
+import com.yp.fastpayment.api.request.ordercount_rq;
+import com.yp.fastpayment.api.request.orderlist_rq;
+import com.yp.fastpayment.api.response.OrderListRE;
+import com.yp.fastpayment.api.response.OrderListResponse;
+import com.yp.fastpayment.api.response.OrderVO;
+import com.yp.fastpayment.api.response.ordercountRE;
+import com.yp.fastpayment.constant.Constants;
+import com.yp.fastpayment.dao.OrderInfoDao;
+import com.yp.fastpayment.dao.OrderListDao;
+import com.yp.fastpayment.model.OrderInfo;
+import com.yp.fastpayment.model.orderlist_mode;
+import com.yp.fastpayment.ui.LoginActivity;
+import com.yp.fastpayment.ui.OrderListActivity;
+import com.yp.fastpayment.util.GsonUtil;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MsgSynchTask implements Runnable {
+
+
+    private static final String TAG = "MsgSynchTask";
+    Handler handler;
+
+    OrderInfoDao orderDao;
+    OrderListRequest request;
+
+    OrderListDao orderListDao;
+    List<orderlist_mode> orderlist_modes=new ArrayList<>();
+    ordercount_rq ordercount_rq;
+    orderlist_rq orderlist_rq;
+
+    int count;
+
+
+    
+    public MsgSynchTask(Context context, Handler handler) {
+        this.context = context;
+        orderDao = new OrderInfoDao(context);
+        orderListDao=new OrderListDao(context);
+        orderlist_modes=orderListDao.query(Constants.shopId,Constants.branchId);
+        count=orderlist_modes.size();
+        this.handler = handler;
+
+        request = new OrderListRequest();
+        request.setBranchId(Constants.branchId);
+        request.setDeviceId(LoginActivity.deviceId);
+        request.setShopId(Constants.shopId);
+        request.setPage(1);
+        request.setEmployeeId(Constants.employeeId);
+
+        ordercount_rq=new ordercount_rq();
+        ordercount_rq.setShopId(Constants.shopId);
+        ordercount_rq.setBranchId(Constants.branchId);
+
+        orderlist_rq=new orderlist_rq();
+        orderlist_rq.setShopId(Constants.shopId.toString());
+        orderlist_rq.setBranchId(Constants.branchId.toString());
+        Log.d(TAG, "shangmishouchiOrderList==" + GsonUtil.GsonString(request));
+
+        Log.d(TAG, "new MsgSynchTask====");
+    }
+
+    Context context;
+
+
+    @Override
+    public void run() {
+        MyRetrofit.getApiService2().getCount(ordercount_rq).enqueue(new Callback<ordercountRE>() {
+            @Override
+            public void onResponse(Call<ordercountRE> call, Response<ordercountRE> response) {
+                Log.d("getcount==","获取订单数量==="+response.body().getData());
+                if(response.body().getData()>count){
+                    Log.d("长度大小=====","刷新");
+
+                    MyRetrofit.getApiService2().GetOrderList(orderlist_rq).enqueue(new Callback<OrderListRE>() {
+                        @Override
+                        public void onResponse(Call<OrderListRE> call, Response<OrderListRE> response) {
+                            List<OrderListRE.orderlist_data> data=response.body().getData();
+                            boolean flag=false;
+                            for (OrderListRE.orderlist_data orderVO : data) {
+
+                            Log.d(TAG, "orderVO==" + GsonUtil.GsonString(orderVO));
+                                orderlist_mode temp = orderListDao.queryOrderByOrderNo(orderVO.getOrderNo());
+                            if (temp == null) {
+                                flag = true;
+                                orderListDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+                                }
+                            }
+                            count=orderListDao.query(Constants.shopId,Constants.branchId).size();
+                            if (flag) {
+                                handler.sendEmptyMessage(1);
+                            }
+
+                        }
+
+                        @Override
+                        public void onFailure(Call<OrderListRE> call, Throwable t) {
+                            Log.d(TAG, "GetOrderList onFailure==" + t.getMessage());
+                            Log.d(TAG, "GetOrderList onFailure==" + t.getCause());
+                            Log.d(TAG, "GetOrderList onFailure==" + call.toString());
+                        }
+                    });
+//
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ordercountRE> call, Throwable t) {
+                Log.d(TAG, "getCount onFailure==" + t.getMessage());
+                Log.d(TAG, "getCount onFailure==" + t.getCause());
+                Log.d(TAG, "getCount onFailure==" + call.toString());
+            }
+        });
+//
+//            @Override
+//            public void onFailure(Call<OrderListRE> call, Throwable t) {
+//                Log.d(TAG, "loginResponse onFailure==" + t.getMessage());
+//                Log.d(TAG, "loginResponse onFailure==" + t.getCause());
+//                Log.d(TAG, "loginResponse onFailure==" + call.toString());
+//            }
+//        });
+
+//        Log.d(TAG, "shangmishouchiOrderList====" + request);
+//        MyRetrofit.getApiService().shangmishouchiGetNewOrder(request).enqueue(new MyCallback<OrderListResponse>() {
+//
+//            @Override
+//            public void onSuccess(OrderListResponse response) {
+//                Log.d(TAG, "OrderListResponse==" + GsonUtil.GsonString(response));
+//                System.out.println("新订单:"+ GsonUtil.GsonString(response));
+//
+//                if (response.getCode() == 200) {
+//                    List<OrderVO> orderVOList = response.getData();
+//
+//                    boolean flag=false;
+//                    if (orderVOList != null && orderVOList.size() > 0) {
+//
+//                        for (OrderVO orderVO : orderVOList) {
+//
+//                            Log.d(TAG, "orderVO==" + GsonUtil.GsonString(orderVO));
+//                            Log.d(TAG, "orderVO item==" + GsonUtil.GsonString(orderVO.getOrderItemList()));
+//                            OrderInfo temp = orderDao.queryOrderByOrderNo(orderVO.getOrderNo());
+//                            if (temp == null) {
+//                                flag = true;
+//                                orderDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+//                            }
+//                        }
+//
+//                        if (flag) {
+//                            handler.sendEmptyMessage(1);
+//                        }
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<OrderListResponse> call, Throwable t) {
+//
+//                Log.d(TAG, "loginResponse onFailure==" + t.getMessage());
+//                Log.d(TAG, "loginResponse onFailure==" + t.getCause());
+//                Log.d(TAG, "loginResponse onFailure==" + call.toString());
+//            }
+//        });
+
+    }
+}

@@ -11,6 +11,7 @@ import com.yp.fastpayment.api.response.InitResponse;
 import com.yp.fastpayment.api.response.OrderDetailRE;
 import com.yp.fastpayment.api.response.OrderListRE;
 import com.yp.fastpayment.api.response.OrderListResponse;
+import com.yp.fastpayment.api.response.mealHourRE;
 import com.yp.fastpayment.api.response.ordercountRE;
 import com.yp.fastpayment.api.response.orderstatusRE;
 
@@ -46,4 +47,7 @@ public interface Api {
 
     @POST("api/wxapp/tz/pad/order/list/count")
     Call<ordercountRE> getCount(@Body ordercount_rq entity);
+
+    @POST("api/wxapp/mealHourConfig/list")
+    Call<mealHourRE> getmealHour(@Body orderlist_rq entity);
 }

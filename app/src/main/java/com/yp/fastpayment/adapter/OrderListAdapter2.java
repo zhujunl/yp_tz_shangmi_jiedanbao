@@ -54,10 +54,10 @@ public class OrderListAdapter2 extends RecyclerView.Adapter<OrderListAdapter2.Vi
         orderlist_mode orderInfo=orderInfoList.get(position);
         if (orderInfo.getSeatNumber()==null||orderInfo.getSeatNumber().equals("")){
             holder.item_tv_order_serial_num.setText("取餐号 " + orderInfo.getMealTakingNum());
-            holder.item_tv_order_style.setText("自提");
+//            holder.item_tv_order_style.setText("自提");
         }else {
             holder.item_tv_order_serial_num.setText("座位号 " + orderInfo.getSeatNumber());
-            holder.item_tv_order_style.setText("堂食");
+//            holder.item_tv_order_style.setText("堂食");
         }
  //       holder.item_tv_order_serial_num.setText("取餐号 " + orderInfo.getSerial());
         holder.item_tv_order_num.setText("订单号： " + orderInfo.getOrderNo());
@@ -86,7 +86,7 @@ public class OrderListAdapter2 extends RecyclerView.Adapter<OrderListAdapter2.Vi
         TextView item_tv_order_price;
         TextView item_tv_order_date;
         TextView item_tv_order_print_state;
-        TextView item_tv_order_style;
+//        TextView item_tv_order_style;
         ConstraintLayout ll_order_layout;
 
         public ViewHolder(@NonNull View itemView) {
@@ -97,7 +97,7 @@ public class OrderListAdapter2 extends RecyclerView.Adapter<OrderListAdapter2.Vi
             item_tv_order_date = itemView.findViewById(R.id.item_tv_order_date);
             item_tv_order_print_state = itemView.findViewById(R.id.item_tv_order_print_state);
             ll_order_layout = itemView.findViewById(R.id.ll_order_layout);
-            item_tv_order_style=itemView.findViewById(R.id.item_tv_order_style);
+//            item_tv_order_style=itemView.findViewById(R.id.item_tv_order_style);
         }
     }
 

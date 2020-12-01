@@ -45,6 +45,7 @@ import com.yp.fastpayment.api.request.OrderListRequest;
 import com.yp.fastpayment.api.request.orderdetail_rq;
 import com.yp.fastpayment.api.request.orderlist_rq;
 import com.yp.fastpayment.api.response.OrderDetailRE;
+import com.yp.fastpayment.api.response.mealHourRE;
 import com.yp.fastpayment.constant.Constants;
 import com.yp.fastpayment.dao.OrderInfoDao;
 import com.yp.fastpayment.dao.OrderListDao;
@@ -93,7 +94,8 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
     OrderListAdapter2 orderListAdapter2;
     Spinner spinner_style;
     int pos_style=0;
-    ArrayList<String> mstyle=new ArrayList<>(Arrays.asList("全部", "堂食", "自提"));
+//    ArrayList<String> mstyle=new ArrayList<>(Arrays.asList("全部", "堂食", "自提"));
+    ArrayList<String> mealHour=new ArrayList<>(Arrays.asList("全部"));
     ArrayAdapter<String> spinneradatper;
     private static final String TAG = "OrderListActivity";
     List<OrderInfo> orderInfoList = new ArrayList<>();
@@ -135,6 +137,34 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
         scheduledExecutorServiceWithMsg.scheduleWithFixedDelay(new MsgSynchTask(this, handler),
                 30, 10, TimeUnit.SECONDS);
 
+        final orderlist_rq orderlist_rq=new orderlist_rq();
+        orderlist_rq.setShopId(Constants.shopId.toString());
+        orderlist_rq.setBranchId(Constants.branchId.toString());
+        MyRetrofit.getApiService2().getmealHour(orderlist_rq).enqueue(new Callback<mealHourRE>() {
+            @Override
+            public void onResponse(Call<mealHourRE> call, Response<mealHourRE> response) {
+                if(response.code()==200){
+                    Log.d("餐段=======",response.body().getData().toString());
+                   for (int i=0;i<response.body().getData().size();i++){
+                       mealHour.add(response.body().getData().get(i).getName());
+                   }
+                   Log.d("mear=====",mealHour.toString());
+                spinneradatper=new ArrayAdapter<String>(OrderListActivity.this,R.layout.item_order_spinner,mealHour);
+                spinneradatper.setDropDownViewResource(R.layout.item_order_spinner_drop);
+                spinner_style.setAdapter(spinneradatper);
+                }else {
+                    showToast(response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<mealHourRE> call, Throwable t) {
+                Log.d(TAG, "getmealHour onFailure==" + t.getMessage());
+                Log.d(TAG, "getmealHour onFailure==" + t.getCause());
+                Log.d(TAG, "getmealHour onFailure==" + call.toString());
+                showToast("网络异常");
+            }
+        });
     }
 
     @Override
@@ -156,7 +186,7 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
         if(pos_style==0){
             orderlist_modes=orderListDao.query(Constants.shopId, Constants.branchId);
         }else {
-            orderlist_modes=orderListDao.querybystyle(pos_style,Constants.shopId, Constants.branchId);
+            orderlist_modes=orderListDao.querybystyle(mealHour.get(pos_style),Constants.shopId, Constants.branchId);
         }
         Log.d(" orderlist_modes====", orderlist_modes.toString());
 
@@ -184,9 +214,6 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
         //swipe_recycler_view.setAdapter(orderListAdapter);
         swipe_recycler_view.setAdapter(orderListAdapter2);
         spinner_style=findViewById(R.id.order_style);
-        spinneradatper=new ArrayAdapter<String>(this,R.layout.item_order_spinner,mstyle);
-        spinneradatper.setDropDownViewResource(R.layout.item_order_spinner_drop);
-        spinner_style.setAdapter(spinneradatper);
         tv_merchant_name.setText(Constants.shopName);
         tv_shop_name.setText(Constants.branchName);
         version.setText("v "+BuildConfig.VERSION_NAME);
@@ -195,27 +222,20 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
         spinner_style.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                switch (i){
-                    case 0:pos_style=0;
-                        break;
-                    case 1:pos_style=1;
-                        break;
-                    case 2:pos_style=2;
-                        break;
-                }
+                pos_style=i;
                 updateOrderInfo();
-//                List<orderlist_mode> mm;
-//                if(i==0){
-//                    mm=orderListDao.query(Constants.shopId, Constants.branchId);
-//                }else {
-//                    mm=orderListDao.querybystyle(i,Constants.shopId, Constants.branchId);
-//                }
-//                if(mm.size()>0){
-//                    updateOrderInfo();
-//                    orderListAdapter2.setOrderInfoList(mm);
-//                }else {
-//                    showToast("当前用餐方式无订单");
-//                }
+                List<orderlist_mode> mm;
+                if(i==0){
+                    mm=orderListDao.query(Constants.shopId, Constants.branchId);
+                }else {
+                    mm=orderListDao.querybystyle(mealHour.get(i),Constants.shopId, Constants.branchId);
+                }
+                if(mm.size()>0){
+                    updateOrderInfo();
+                    orderListAdapter2.setOrderInfoList(mm);
+                }else {
+                    showToast("当前选择的餐段无订单");
+                }
 
                Log.d("点击的是",pos_style+"");
             }
@@ -503,7 +523,7 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
         if(pos_style==0){
             mo=orderListDao.query(Constants.shopId, Constants.branchId);
         }else {
-            mo=orderListDao.querybystyle(pos_style,Constants.shopId, Constants.branchId);
+            mo=orderListDao.querybystyle(mealHour.get(pos_style),Constants.shopId, Constants.branchId);
         }
         for(orderlist_mode i:mo){
             if(i.getOrderNo().equals(da.getOrderNo())){

@@ -141,9 +141,9 @@ public class OrderListDao {
         return orderInfoList;
     }
 
-    public List<orderlist_mode> querybystyle(Integer style,Integer shopId, Integer branchId) {
-        String sql = "select * from orderList where shopId = ? and branchId = ? and reserveType = ? order by id desc";
-        Cursor cursor = mDatabase.rawQuery(sql, new String[]{shopId.toString(), branchId.toString(),style.toString()});
+    public List<orderlist_mode> querybystyle(String style,Integer shopId, Integer branchId) {
+        String sql = "select * from orderList where shopId = ? and branchId = ? and mealTime = ? order by id desc";
+        Cursor cursor = mDatabase.rawQuery(sql, new String[]{shopId.toString(), branchId.toString(),style});
 
         if (cursor == null) {
             return null;

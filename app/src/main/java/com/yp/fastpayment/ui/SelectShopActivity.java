@@ -88,12 +88,17 @@ public class SelectShopActivity extends BaseActivity implements OnShopItemClickL
                     Constants.orderlist_data = orderVOList;
                     for (OrderListRE.orderlist_data orderVO : orderVOList) {
                         Log.d(TAG, "OrderListRE.orderlist_data==" + GsonUtil.GsonString(orderVO));
-                        orderlist_mode temp = orderListDao.queryOrderByOrderNo(orderVO.getOrderNo());
-                        if (temp == null) {
-                            orderListDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+                        if(orderVO.getStatus()!=11){
+                            orderlist_mode temp = orderListDao.queryOrderByOrderNo(orderVO.getOrderNo());
+                            if (temp == null) {
+                                orderListDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+                            }
                         }
                     }
-
+                    if(orderListDao.query(Constants.shopId, Constants.branchId).size()==0){
+                        showToast("分店暂无订单");
+                        return;
+                    }
                     startActivity(new Intent(mContext, OrderListActivity.class));
                 }else {
                     showToast("分店暂无订单");

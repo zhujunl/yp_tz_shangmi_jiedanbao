@@ -93,11 +93,14 @@ public class MsgSynchTask implements Runnable {
 
     @Override
     public void run() {
+        /**
+         * 根据长度增加订单列表数据库
+         */
         MyRetrofit.getApiService2().getCount(ordercount_rq).enqueue(new Callback<ordercountRE>() {
             @Override
             public void onResponse(Call<ordercountRE> call, Response<ordercountRE> response) {
                 Log.d("getcount==","获取订单数量==="+response.body().getData());
-                if(response.body().getData().getLen()>count){
+                if((response.body().getData().getLen()-response.body().getData().getCancelList().size())>count){
                     Log.d("长度大小=====","刷新");
 
                     MyRetrofit.getApiService2().GetOrderList(orderlist_rq).enqueue(new Callback<OrderListRE>() {
@@ -106,12 +109,13 @@ public class MsgSynchTask implements Runnable {
                             List<OrderListRE.orderlist_data> data=response.body().getData();
                             boolean flag=false;
                             for (OrderListRE.orderlist_data orderVO : data) {
-
-                            Log.d(TAG, "orderVO==" + GsonUtil.GsonString(orderVO));
-                                orderlist_mode temp = orderListDao.queryOrderByOrderNo(orderVO.getOrderNo());
-                            if (temp == null) {
-                                flag = true;
-                                orderListDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+                                if(orderVO.getStatus()!=11){
+                                    Log.d(TAG, "orderVO==" + GsonUtil.GsonString(orderVO));
+                                    orderlist_mode temp = orderListDao.queryOrderByOrderNo(orderVO.getOrderNo());
+                                    if (temp == null) {
+                                        flag = true;
+                                        orderListDao.insertData(orderVO, Constants.shopId, Constants.branchId);
+                                    }
                                 }
                             }
                             count=orderListDao.query(Constants.shopId,Constants.branchId).size();
@@ -139,7 +143,9 @@ public class MsgSynchTask implements Runnable {
                 Log.d(TAG, "getCount onFailure==" + call.toString());
             }
         });
-
+/**
+ * 访问被取消的订单是否有增加
+ */
         MyRetrofit.getApiService2().getCount(ordercount_rq).enqueue(new Callback<ordercountRE>() {
             @Override
             public void onResponse(Call<ordercountRE> call, Response<ordercountRE> response) {

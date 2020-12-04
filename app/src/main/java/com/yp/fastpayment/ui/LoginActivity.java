@@ -76,7 +76,6 @@ public class LoginActivity extends BaseActivity {
 
         user=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("user");
         pwd=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("pwd");
-        showToast("user=="+user+"             "+"pwd===="+pwd);
         if (user!=""&&pwd!=""){
             loginAdmin();
         }

@@ -117,6 +117,9 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
                 playMusic(1);
                 updateOrderInfo();
                 return;
+            }else if(msg.what==2){
+                updateOrderInfo();
+                return;
             }
         }
     };
@@ -138,6 +141,7 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
                 30, 10, TimeUnit.SECONDS);
 
         final orderlist_rq orderlist_rq=new orderlist_rq();
+
         orderlist_rq.setShopId(Constants.shopId.toString());
         orderlist_rq.setBranchId(Constants.branchId.toString());
         MyRetrofit.getApiService2().getmealHour(orderlist_rq).enqueue(new Callback<mealHourRE>() {
@@ -400,6 +404,10 @@ public class OrderListActivity extends BaseActivity implements View.OnClickListe
                 popupWindow.dismiss();
                 SharedPreferenceUtil.getInstance(OrderListActivity.this).putString("user","");
                 SharedPreferenceUtil.getInstance(OrderListActivity.this).putString("pwd","");
+                List<orderlist_mode> list=orderListDao.query(Constants.shopId, Constants.branchId);
+                for (orderlist_mode i:list) {
+                    orderListDao.clearList(i.getOrderNo(),Constants.shopId, Constants.branchId);
+                }
                 startActivity(new Intent(mContext, LoginActivity.class));
                 finish();
                 break;

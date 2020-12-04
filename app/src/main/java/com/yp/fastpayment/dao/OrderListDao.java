@@ -169,4 +169,8 @@ public class OrderListDao {
         }
         return orderInfoList;
     }
+
+    public void clearList(String orderno,Integer shopId, Integer branchId){
+        mDatabase.delete("orderList","shopId = ? and branchId = ? and orderNo = ?",new String[]{shopId.toString(),branchId.toString(),orderno});
+    }
 }

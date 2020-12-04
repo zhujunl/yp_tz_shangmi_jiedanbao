@@ -55,6 +55,7 @@ public class MsgSynchTask implements Runnable {
     List<orderlist_mode> orderlist_modes=new ArrayList<>();
     ordercount_rq ordercount_rq;
     orderlist_rq orderlist_rq;
+    List<String> cancelList=new ArrayList<>();
 
     int count;
 
@@ -96,7 +97,7 @@ public class MsgSynchTask implements Runnable {
             @Override
             public void onResponse(Call<ordercountRE> call, Response<ordercountRE> response) {
                 Log.d("getcount==","获取订单数量==="+response.body().getData());
-                if(response.body().getData()>count){
+                if(response.body().getData().getLen()>count){
                     Log.d("长度大小=====","刷新");
 
                     MyRetrofit.getApiService2().GetOrderList(orderlist_rq).enqueue(new Callback<OrderListRE>() {
@@ -138,55 +139,42 @@ public class MsgSynchTask implements Runnable {
                 Log.d(TAG, "getCount onFailure==" + call.toString());
             }
         });
-//
-//            @Override
-//            public void onFailure(Call<OrderListRE> call, Throwable t) {
-//                Log.d(TAG, "loginResponse onFailure==" + t.getMessage());
-//                Log.d(TAG, "loginResponse onFailure==" + t.getCause());
-//                Log.d(TAG, "loginResponse onFailure==" + call.toString());
-//            }
-//        });
 
-//        Log.d(TAG, "shangmishouchiOrderList====" + request);
-//        MyRetrofit.getApiService().shangmishouchiGetNewOrder(request).enqueue(new MyCallback<OrderListResponse>() {
-//
-//            @Override
-//            public void onSuccess(OrderListResponse response) {
-//                Log.d(TAG, "OrderListResponse==" + GsonUtil.GsonString(response));
-//                System.out.println("新订单:"+ GsonUtil.GsonString(response));
-//
-//                if (response.getCode() == 200) {
-//                    List<OrderVO> orderVOList = response.getData();
-//
-//                    boolean flag=false;
-//                    if (orderVOList != null && orderVOList.size() > 0) {
-//
-//                        for (OrderVO orderVO : orderVOList) {
-//
-//                            Log.d(TAG, "orderVO==" + GsonUtil.GsonString(orderVO));
-//                            Log.d(TAG, "orderVO item==" + GsonUtil.GsonString(orderVO.getOrderItemList()));
-//                            OrderInfo temp = orderDao.queryOrderByOrderNo(orderVO.getOrderNo());
-//                            if (temp == null) {
-//                                flag = true;
-//                                orderDao.insertData(orderVO, Constants.shopId, Constants.branchId);
-//                            }
-//                        }
-//
-//                        if (flag) {
-//                            handler.sendEmptyMessage(1);
-//                        }
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<OrderListResponse> call, Throwable t) {
-//
-//                Log.d(TAG, "loginResponse onFailure==" + t.getMessage());
-//                Log.d(TAG, "loginResponse onFailure==" + t.getCause());
-//                Log.d(TAG, "loginResponse onFailure==" + call.toString());
-//            }
-//        });
+        MyRetrofit.getApiService2().getCount(ordercount_rq).enqueue(new Callback<ordercountRE>() {
+            @Override
+            public void onResponse(Call<ordercountRE> call, Response<ordercountRE> response) {
+                boolean flag=false;
+                if (response.body().getData().getCancelList().size()>0){
+                    if (cancelList.size()<response.body().getData().getCancelList().size()){
+                        List<String> data=response.body().getData().getCancelList();
+                        if(cancelList.size()==0){cancelList=data;}
+                        else {
+                            for (int i=0;i<data.size();i++){
+                                for (int j=0;j<cancelList.size();j++){
+                                    if(!cancelList.get(j).equals(data.get(i))){
+                                        cancelList.add(data.get(i));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for (int i=0;i<cancelList.size();i++){
+                        orderListDao.clearList(cancelList.get(i),Constants.shopId,Constants.branchId);
+                    }
+                    flag=true;
+                }
+                if (flag) {
+                    handler.sendEmptyMessage(2);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ordercountRE> call, Throwable t) {
+                Log.d(TAG, "GetOrderList onFailure==" + t.getMessage());
+                Log.d(TAG, "GetOrderList onFailure==" + t.getCause());
+                Log.d(TAG, "GetOrderList onFailure==" + call.toString());
+            }
+        });
 
     }
 }

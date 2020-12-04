@@ -58,6 +58,10 @@ public class LoginActivity extends BaseActivity {
     final static long DURATION = 3 * 1000;// 规定有效时间
     long[] mHits = new long[COUNTS];
 
+    private String user;
+    private String pwd;
+    String user_account;
+    String user_psw;
     @Override
     protected int layoutId() {
         return R.layout.activity_login;
@@ -70,8 +74,9 @@ public class LoginActivity extends BaseActivity {
 
         ShopConfig shopConfig = shopConfigDao.query();
 
-        String user=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("user");
-        String pwd=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("pwd");
+        user=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("user");
+        pwd=SharedPreferenceUtil.getInstance(LoginActivity.this).getString("pwd");
+        showToast("user=="+user+"             "+"pwd===="+pwd);
         if (user!=""&&pwd!=""){
             loginAdmin();
         }
@@ -139,10 +144,16 @@ public class LoginActivity extends BaseActivity {
 
 
     void loginAdmin() {
+//        String user_account = edit_user_account.getText().toString().trim();
+//        String user_psw = edit_user_psw.getText().toString().trim();
 
-        String user_account = edit_user_account.getText().toString().trim();
-        String user_psw = edit_user_psw.getText().toString().trim();
 
+        if(user!=""&&pwd!=""){
+            user_account=user;user_psw=pwd;
+        }else {
+        user_account = edit_user_account.getText().toString().trim();
+        user_psw = edit_user_psw.getText().toString().trim();
+        }
         if (user_account == null || "".equals(user_account)) {
             ShopConfig shopConfig = shopConfigDao.query();
             if (shopConfig != null) {
@@ -200,15 +211,14 @@ public class LoginActivity extends BaseActivity {
                             branchVO.setBranchName(Constants.branchName);
 
                             Constants.branchVOList.add(branchVO);
-
-                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",edit_user_account.getText().toString().trim());
-                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",edit_user_account.getText().toString().trim());
+                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",user_account);
+                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",user_psw);
                             startActivity(new Intent(mContext, SelectShopActivity.class));
                             Log.d(TAG, "branchVOList.size() == 1");
                         } else {
                             Constants.branchVOList = branchVOList;
-                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",edit_user_account.getText().toString().trim());
-                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",edit_user_account.getText().toString().trim());
+                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",user_account);
+                            SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",user_psw);
                             startActivity(new Intent(mContext, SelectShopActivity.class));
                         }
                     } else {
@@ -220,8 +230,8 @@ public class LoginActivity extends BaseActivity {
                         branchVO.setBranchName(Constants.branchName);
 
                         Constants.branchVOList.add(branchVO);
-                        SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",edit_user_account.getText().toString().trim());
-                        SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",edit_user_account.getText().toString().trim());
+                        SharedPreferenceUtil.getInstance(LoginActivity.this).putString("user",user_account);
+                        SharedPreferenceUtil.getInstance(LoginActivity.this).putString("pwd",user_psw);
                         startActivity(new Intent(mContext, SelectShopActivity.class));
                         Log.d(TAG, "branchVOList.size() === 1");
                     }
